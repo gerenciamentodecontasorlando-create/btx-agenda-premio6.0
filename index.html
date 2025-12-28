@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BTX Agenda & Docs — Premium Clean</title>
+
+  <meta name="theme-color" content="#0b0f14" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="badge">BTX</div>
+      <div class="brandText">
+        <div class="title">BTX Agenda & Docs — Premium Clean</div>
+        <div class="subtitle">Offline-first • Multi-profissional • Impressos limpos</div>
+      </div>
+    </div>
+
+    <div class="topActions">
+      <button id="btnInstall" class="btn ghost" title="Instalar PWA">Baixar app</button>
+      <button id="btnBackup" class="btn ghost" title="Exportar JSON">Backup</button>
+      <label class="btn ghost file" title="Importar JSON">
+        Restaurar
+        <input id="fileRestore" type="file" accept="application/json" />
+      </label>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="card">
+        <div class="cardTitle">Clínica / Profissionais</div>
+        <div class="muted">O profissional ativo preenche automaticamente todos os documentos.</div>
+
+        <div class="row">
+          <button id="btnNewPro" class="btn">+ Novo</button>
+          <button id="btnManagePro" class="btn ghost">Gerenciar</button>
+        </div>
+
+        <div class="field">
+          <label>Profissional ativo</label>
+          <select id="selProAtivo"></select>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="cardTitle">Módulos</div>
+        <div class="nav">
+          <button class="navItem active" data-view="agenda">Agenda</button>
+          <button class="navItem" data-view="receita">Receituário</button>
+          <button class="navItem" data-view="atestado">Atestado</button>
+          <button class="navItem" data-view="ficha">Ficha clínica</button>
+        </div>
+
+        <div class="sep"></div>
+        <div class="muted small">
+          Impressos são gerados a partir de <strong>template limpo</strong>. Nada de texto do sistema no PDF.
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div id="toast" class="toast"></div>
+
+      <!-- AGENDA -->
+      <section id="view-agenda" class="view">
+        <div class="viewHead">
+          <div>
+            <h2>Agenda</h2>
+            <div class="muted">Navegue por dia com total clareza. Tudo salvo na memória (IndexedDB).</div>
+          </div>
+          <div class="row">
+            <button id="btnPrevDay" class="btn ghost" title="Dia anterior">◀</button>
+            <input id="agendaDate" type="date" />
+            <button id="btnNextDay" class="btn ghost" title="Próximo dia">▶</button>
+            <button id="btnAgendar" class="btn">+ Agendar</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="agendaHeader">
+            <div class="agendaBigDate" id="agendaBigDate">—</div>
+            <div class="agendaWeek" id="agendaWeek"></div>
+          </div>
+          <div class="sep"></div>
+
+          <div class="grid2">
+            <div>
+              <div class="cardTitle">Agendamentos do dia</div>
+              <div id="agendaList" class="list"></div>
+            </div>
+            <div>
+              <div class="cardTitle">Resumo</div>
+              <div id="agendaStats" class="muted"></div>
+              <div class="sep"></div>
+              <button id="btnAgendaPrint" class="btn ghost">Imprimir / PDF do dia</button>
+              <div class="muted small mt8">
+                No computador: clique em <strong>Imprimir</strong> e escolha “Salvar como PDF”.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RECEITA -->
+      <section id="view-receita" class="view hidden">
+        <div class="viewHead">
+          <div>
+            <h2>Receituário</h2>
+            <div class="muted">Somente a prescrição entra no impresso. Sem textos do sistema.</div>
+          </div>
+          <div class="row">
+            <button id="btnRxClear" class="btn ghost">Limpar</button>
+            <button id="btnRxPrint" class="btn">Imprimir / PDF</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="grid2">
+            <div class="field">
+              <label>Paciente</label>
+              <input id="rxPaciente" class="input" placeholder="Nome do paciente" />
+            </div>
+            <div class="field">
+              <label>Data</label>
+              <input id="rxData" type="date" />
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div class="field">
+              <label>Categoria</label>
+              <select id="rxCategoria"></select>
+            </div>
+            <div class="field">
+              <label>Modelo</label>
+              <select id="rxModelo"></select>
+            </div>
+          </div>
+
+          <div class="row">
+            <button id="btnRxApply" class="btn ghost">Aplicar modelo</button>
+            <button id="btnRxAddLine" class="btn ghost">+ Linha</button>
+          </div>
+
+          <div class="field">
+            <label>Prescrição (isso é o que vai para o PDF)</label>
+            <textarea id="rxTexto" rows="10"></textarea>
+          </div>
+
+          <div class="muted small">
+            Dica: mantenha a receita minimalista. Cabeçalho (profissional) + paciente + prescrição + assinatura.
+          </div>
+        </div>
+      </section>
+
+      <!-- ATESTADO -->
+      <section id="view-atestado" class="view hidden">
+        <div class="viewHead">
+          <div>
+            <h2>Atestado</h2>
+            <div class="muted">Impresso limpo e formal.</div>
+          </div>
+          <div class="row">
+            <button id="btnAtClear" class="btn ghost">Limpar</button>
+            <button id="btnAtPrint" class="btn">Imprimir / PDF</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="grid2">
+            <div class="field">
+              <label>Paciente</label>
+              <input id="atPaciente" class="input" placeholder="Nome do paciente" />
+            </div>
+            <div class="field">
+              <label>Data</label>
+              <input id="atData" type="date" />
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div class="field">
+              <label>Dias de afastamento</label>
+              <input id="atDias" class="input" placeholder="Ex.: 2" />
+            </div>
+            <div class="field">
+              <label>CID (opcional)</label>
+              <input id="atCID" class="input" placeholder="Ex.: K08.1" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Texto do atestado</label>
+            <textarea id="atTexto" rows="7" placeholder="Declaro para os devidos fins que..."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- FICHA -->
+      <section id="view-ficha" class="view hidden">
+        <div class="viewHead">
+          <div>
+            <h2>Ficha Clínica</h2>
+            <div class="muted">Salvamento confiável (autosave) e impresso limpo.</div>
+          </div>
+          <div class="row">
+            <button id="btnFichaSave" class="btn">Salvar</button>
+            <button id="btnFichaPrint" class="btn ghost">Imprimir / PDF</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="grid2">
+            <div class="field">
+              <label>Paciente</label>
+              <input id="fiPaciente" class="input" placeholder="Nome do paciente" />
+            </div>
+            <div class="field">
+              <label>Data</label>
+              <input id="fiData" type="date" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Anamnese</label>
+            <textarea id="fiAnamnese" rows="6"></textarea>
+          </div>
+          <div class="field">
+            <label>Exame / Achados</label>
+            <textarea id="fiExame" rows="5"></textarea>
+          </div>
+          <div class="field">
+            <label>Plano / Conduta</label>
+            <textarea id="fiPlano" rows="5"></textarea>
+          </div>
+
+          <div id="fiStatus" class="muted small"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalCard">
+      <div class="modalHead">
+        <div id="modalTitle" class="modalTitle">—</div>
+        <button id="modalClose" class="btn ghost">X</button>
+      </div>
+      <div id="modalBody"></div>
+      <div class="modalFoot">
+        <button id="modalCancel" class="btn ghost">Cancelar</button>
+        <button id="modalOk" class="btn">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="db.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
